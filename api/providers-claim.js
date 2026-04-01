@@ -45,11 +45,8 @@ export default async function handler(req, res) {
       "Logo",
       "Featured Partner",
       "Trusted Pick",
-      "Average Rating",
       "Average Rating Rounded",
       "Review Count",
-      "Helpful Count",
-      "Approved Quotes",
       "Display Status",
       "Sort Priority",
       "Contact Name",
@@ -65,6 +62,7 @@ export default async function handler(req, res) {
 
     const params = new URLSearchParams();
     params.set("view", viewName);
+
     for (const field of fields) {
       params.append("fields[]", field);
     }
@@ -72,7 +70,9 @@ export default async function handler(req, res) {
     const airtableUrl = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}?${params.toString()}`;
 
     const airtableRes = await fetch(airtableUrl, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
     if (!airtableRes.ok) {
@@ -88,6 +88,7 @@ export default async function handler(req, res) {
 
     const records = rawRecords.map((record) => {
       const f = record.fields || {};
+
       return {
         id: record.id,
         displayName: f["Display Name"] || "",
