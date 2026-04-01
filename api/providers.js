@@ -30,6 +30,7 @@ export default async function handler(req, res) {
 
     const fields = [
       "Display Name",
+      "Provider Name, 
       "Category",
       "Subcategory",
       "Short Description",
@@ -50,7 +51,6 @@ export default async function handler(req, res) {
       "Review Count",
       "Helpful Count",
       "Approved Quotes",
-      "Display Status",
       "Sort Priority"
     ];
 
@@ -86,6 +86,7 @@ export default async function handler(req, res) {
       return {
         id: record.id,
         displayName: f["Display Name"] || "",
+        provderName: f["Provider Name"] || "",
         category: f["Category"] || "",
         subcategory: f["Subcategory"] || "",
         shortDescription: f["Short Description"] || "",
@@ -106,7 +107,6 @@ export default async function handler(req, res) {
         reviewCount: f["Review Count"] ?? 0,
         helpfulCount: f["Helpful Count"] ?? 0,
         approvedQuotes: f["Approved Quotes"] || "",
-        displayStatus: f["Display Status"] || "",
         sortPriority: f["Sort Priority"] ?? 9999
       };
     });
