@@ -52,11 +52,7 @@ export default async function handler(req, res) {
       "Approved Quotes",
       "Display Status",
       "Sort Priority",
-      "Google Place ID",
-      "Google Rating",
-      "Google Review Count",
-      "Google Reviews URL"
-    ];
+          ];
 
     const params = new URLSearchParams();
     params.set("view", viewName);
