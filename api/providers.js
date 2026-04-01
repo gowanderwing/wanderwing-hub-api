@@ -112,11 +112,7 @@ export default async function handler(req, res) {
         approvedQuotes: f["Approved Quotes"] || "",
         displayStatus: f["Display Status"] || "",
         sortPriority: f["Sort Priority"] ?? 9999,
-        googlePlaceId: f["Google Place ID"] || "",
-        googleRating: f["Google Rating"] ?? null,
-        googleReviewCount: f["Google Review Count"] ?? 0,
-        googleReviewsUrl: f["Google Reviews URL"] || ""
-      };
+              };
     });
 
     records.sort((a, b) => {
