@@ -1,7 +1,14 @@
 export default async function handler(req, res) {
-  const allowedOrigin = "https://www.wanderwing.org";
+  const allowedOrigins = [
+  "https://www.wanderwing.org",
+  "https://wanderwing.org"
+];
 
-  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+const origin = req.headers.origin;
+
+if (allowedOrigins.includes(origin)) {
+  res.setHeader("Access-Control-Allow-Origin", origin);
+}
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -88,11 +95,28 @@ export default async function handler(req, res) {
       };
     }
 
-    const records = await Promise.all(
-      rawRecords.map(async (record) => {
-        const f = record.fields || {};
-        const placeId = f["Google Place ID"] || "";
-        const googleData = placeId ? await fetchGoogleData(placeId) : null;
+    const records = rawRecords.map((record) => {
+  const f = record.fields || {};
+
+  return {
+    id: record.id,
+    displayName: f["Display Name"] || "",
+    category: f["Category"] || "",
+    shortDescription: f["Short Description"] || "",
+    city: f["City"] || "",
+    state: f["State"] || "",
+    locationType: f["Location Type"] || "",
+    publicLocation: f["Public Location"] || "",
+    tags: f["Tags"] || [],
+    websiteUrl: f["Website URL"] || "",
+    logo: Array.isArray(f["Logo"]) && f["Logo"][0]?.url ? f["Logo"][0].url : "",
+    featuredPartner: !!f["Featured Partner"],
+    trustedPick: !!f["Trusted Pick"],
+    averageRatingRounded: f["Average Rating Rounded"] || null,
+    reviewCount: f["Review Count"] || 0,
+    displayStatus: f["Display Status"] || ""
+  };
+});
 
         return {
           id: record.id,
