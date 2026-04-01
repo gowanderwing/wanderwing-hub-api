@@ -1,14 +1,14 @@
 export default async function handler(req, res) {
   const allowedOrigins = [
-  "https://www.wanderwing.org",
-  "https://wanderwing.org"
-];
+    "https://www.wanderwing.org",
+    "https://wanderwing.org"
+  ];
 
-const origin = req.headers.origin;
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
 
-if (allowedOrigins.includes(origin)) {
-  res.setHeader("Access-Control-Allow-Origin", origin);
-}
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -21,10 +21,11 @@ if (allowedOrigins.includes(origin)) {
     const baseId = process.env.AIRTABLE_BASE_ID;
     const tableName = process.env.AIRTABLE_TABLE_NAME;
     const viewName = process.env.AIRTABLE_VIEW_NAME;
-    const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
     if (!token || !baseId || !tableName || !viewName) {
-      return res.status(500).json({ error: "Missing Airtable environment variables." });
+      return res.status(500).json({
+        error: "Missing Airtable environment variables."
+      });
     }
 
     const fields = [
@@ -59,6 +60,7 @@ if (allowedOrigins.includes(origin)) {
 
     const params = new URLSearchParams();
     params.set("view", viewName);
+
     for (const field of fields) {
       params.append("fields[]", field);
     }
@@ -73,87 +75,62 @@ if (allowedOrigins.includes(origin)) {
 
     if (!airtableRes.ok) {
       const text = await airtableRes.text();
-      return res.status(airtableRes.status).json({ error: text });
+      return res.status(airtableRes.status).json({
+        error: "Airtable request failed",
+        details: text
+      });
     }
 
     const airtableData = await airtableRes.json();
-    const rawRecords = airtableData.records || [];
-
-    async function fetchGoogleData(placeId) {
-      if (!googleApiKey || !placeId) return null;
-
-      const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?fields=id,displayName,rating,userRatingCount,googleMapsUri&key=${encodeURIComponent(googleApiKey)}`;
-
-      const googleRes = await fetch(url);
-      if (!googleRes.ok) return null;
-
-      const data = await googleRes.json();
-      return {
-        googleRating: data.rating ?? null,
-        googleReviewCount: data.userRatingCount ?? null,
-        googleReviewsUrl: data.googleMapsUri ?? ""
-      };
-    }
+    const rawRecords = Array.isArray(airtableData.records) ? airtableData.records : [];
 
     const records = rawRecords.map((record) => {
-  const f = record.fields || {};
+      const f = record.fields || {};
 
-  return {
-    id: record.id,
-    displayName: f["Display Name"] || "",
-    category: f["Category"] || "",
-    shortDescription: f["Short Description"] || "",
-    city: f["City"] || "",
-    state: f["State"] || "",
-    locationType: f["Location Type"] || "",
-    publicLocation: f["Public Location"] || "",
-    tags: f["Tags"] || [],
-    websiteUrl: f["Website URL"] || "",
-    logo: Array.isArray(f["Logo"]) && f["Logo"][0]?.url ? f["Logo"][0].url : "",
-    featuredPartner: !!f["Featured Partner"],
-    trustedPick: !!f["Trusted Pick"],
-    averageRatingRounded: f["Average Rating Rounded"] || null,
-    reviewCount: f["Review Count"] || 0,
-    displayStatus: f["Display Status"] || ""
-  };
-});
+      return {
+        id: record.id,
+        displayName: f["Display Name"] || "",
+        category: f["Category"] || "",
+        subcategory: f["Subcategory"] || "",
+        shortDescription: f["Short Description"] || "",
+        city: f["City"] || "",
+        state: f["State"] || "",
+        locationType: f["Location Type"] || "",
+        publicLocation: f["Public Location"] || "",
+        ageMin: f["Age Min"] ?? null,
+        ageMax: f["Age Max"] ?? null,
+        publicAgeRange: f["Public Age Range"] || "",
+        tags: Array.isArray(f["Tags"]) ? f["Tags"] : [],
+        websiteUrl: f["Website URL"] || "",
+        logo: Array.isArray(f["Logo"]) && f["Logo"][0]?.url ? f["Logo"][0].url : "",
+        featuredPartner: Boolean(f["Featured Partner"]),
+        trustedPick: Boolean(f["Trusted Pick"]),
+        averageRating: f["Average Rating"] ?? null,
+        averageRatingRounded: f["Average Rating Rounded"] ?? null,
+        reviewCount: f["Review Count"] ?? 0,
+        helpfulCount: f["Helpful Count"] ?? 0,
+        approvedQuotes: f["Approved Quotes"] || "",
+        displayStatus: f["Display Status"] || "",
+        sortPriority: f["Sort Priority"] ?? 9999,
+        googlePlaceId: f["Google Place ID"] || "",
+        googleRating: f["Google Rating"] ?? null,
+        googleReviewCount: f["Google Review Count"] ?? 0,
+        googleReviewsUrl: f["Google Reviews URL"] || ""
+      };
+    });
 
-        return {
-          id: record.id,
-          displayName: f["Display Name"] || "",
-          category: f["Category"] || "",
-          subcategory: f["Subcategory"] || "",
-          shortDescription: f["Short Description"] || "",
-          city: f["City"] || "",
-          state: f["State"] || "",
-          locationType: f["Location Type"] || "",
-          publicLocation: f["Public Location"] || "",
-          ageMin: f["Age Min"] || null,
-          ageMax: f["Age Max"] || null,
-          publicAgeRange: f["Public Age Range"] || "",
-          tags: f["Tags"] || [],
-          websiteUrl: f["Website URL"] || "",
-          logo: Array.isArray(f["Logo"]) && f["Logo"][0]?.url ? f["Logo"][0].url : "",
-          featuredPartner: !!f["Featured Partner"],
-          trustedPick: !!f["Trusted Pick"],
-          averageRating: f["Average Rating"] || null,
-          averageRatingRounded: f["Average Rating Rounded"] || null,
-          reviewCount: f["Review Count"] || 0,
-          helpfulCount: f["Helpful Count"] || 0,
-          approvedQuotes: f["Approved Quotes"] || "",
-          displayStatus: f["Display Status"] || "",
-          sortPriority: f["Sort Priority"] || 9999,
-          googlePlaceId: placeId,
-          googleRating: googleData?.googleRating ?? f["Google Rating"] ?? null,
-          googleReviewCount: googleData?.googleReviewCount ?? f["Google Review Count"] ?? 0,
-          googleReviewsUrl: googleData?.googleReviewsUrl ?? f["Google Reviews URL"] ?? ""
-        };
-      })
-    );
+    records.sort((a, b) => {
+      const aPriority = Number(a.sortPriority) || 9999;
+      const bPriority = Number(b.sortPriority) || 9999;
+      return aPriority - bPriority;
+    });
 
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({ records });
   } catch (error) {
-    return res.status(500).json({ error: error.message || "Unknown error" });
+    return res.status(500).json({
+      error: "Server error",
+      details: error?.message || String(error)
+    });
   }
 }
