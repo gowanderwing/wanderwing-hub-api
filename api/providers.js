@@ -23,14 +23,11 @@ export default async function handler(req, res) {
     const viewName = process.env.AIRTABLE_VIEW_NAME;
 
     if (!token || !baseId || !tableName || !viewName) {
-      return res.status(500).json({
-        error: "Missing Airtable environment variables."
-      });
+      return res.status(500).json({ error: "Missing Airtable environment variables." });
     }
 
     const fields = [
       "Display Name",
-      "Provider Name, 
       "Category",
       "Subcategory",
       "Short Description",
@@ -51,6 +48,7 @@ export default async function handler(req, res) {
       "Review Count",
       "Helpful Count",
       "Approved Quotes",
+      "Display Status",
       "Sort Priority"
     ];
 
@@ -86,7 +84,6 @@ export default async function handler(req, res) {
       return {
         id: record.id,
         displayName: f["Display Name"] || "",
-        provderName: f["Provider Name"] || "",
         category: f["Category"] || "",
         subcategory: f["Subcategory"] || "",
         shortDescription: f["Short Description"] || "",
@@ -107,21 +104,28 @@ export default async function handler(req, res) {
         reviewCount: f["Review Count"] ?? 0,
         helpfulCount: f["Helpful Count"] ?? 0,
         approvedQuotes: f["Approved Quotes"] || "",
+        displayStatus: f["Display Status"] || "",
         sortPriority: f["Sort Priority"] ?? 9999
       };
     });
 
-    // Sort by priority (lower number = higher priority)
-    records.sort((a, b) => {
+    const filtered = records.filter((r) => {
+      return (
+        String(r.displayStatus || "").toLowerCase() === "live" &&
+        String(r.displayName || "").trim() &&
+        String(r.shortDescription || "").trim() &&
+        String(r.websiteUrl || "").trim()
+      );
+    });
+
+    filtered.sort((a, b) => {
       const aPriority = Number(a.sortPriority) || 9999;
       const bPriority = Number(b.sortPriority) || 9999;
       return aPriority - bPriority;
     });
 
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-
-    return res.status(200).json({ records });
-
+    return res.status(200).json({ records: filtered });
   } catch (error) {
     return res.status(500).json({
       error: "Server error",
