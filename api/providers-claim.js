@@ -55,8 +55,7 @@ export default async function handler(req, res) {
       "Instagram",
       "Facebook",
       "Guide Category",
-      "TikTok",
-      "Status"
+      "TikTok"
     ];
 
     const params = new URLSearchParams();
@@ -118,8 +117,7 @@ export default async function handler(req, res) {
         instagram: f["Instagram"] || "",
         facebook: f["Facebook"] || "",
         guideCategory: f["Guide Category"] || "",
-        tikTok: f["TikTok"] || "",
-        status: f["Status"] || ""
+        tikTok: f["TikTok"] || ""
       };
     });
 
