@@ -29,42 +29,30 @@ export default async function handler(req, res) {
     }
 
     const fields = [
-  "Display Name",
-  "Category",
-  "Subcategory",
-  "Short Description",
-  "City",
-  "State",
-  "Location Type",
-  "Public Location",
-  "Age Min",
-  "Age Max",
-  "Public Age Range",
-  "Tags",
-  "Website URL",
-  "Logo",
-  "Featured Partner",
-  "Trusted Pick",
-  "Average Rating",
-  "Average Rating Rounded",
-  "Review Count",
-  "Helpful Count",
-  "Approved Quotes",
-  "Display Status",
-  "Sort Priority",
-  
-  "Virtual Option",
-  "Ages Served",
-  "Contact Name",
-  "Email",
-  "Phone",
-  "Instagram",
-  "Facebook",
-  "Guide Category",
-  "TikTok",
-  "Role",
-  "Status"
-];
+      "Display Name",
+      "Category",
+      "Subcategory",
+      "Short Description",
+      "City",
+      "State",
+      "Location Type",
+      "Public Location",
+      "Age Min",
+      "Age Max",
+      "Public Age Range",
+      "Tags",
+      "Website URL",
+      "Logo",
+      "Featured Partner",
+      "Trusted Pick",
+      "Average Rating",
+      "Average Rating Rounded",
+      "Review Count",
+      "Helpful Count",
+      "Approved Quotes",
+      "Display Status",
+      "Sort Priority"
+    ];
 
     const params = new URLSearchParams();
     params.set("view", viewName);
@@ -95,8 +83,35 @@ export default async function handler(req, res) {
     const records = rawRecords.map((record) => {
       const f = record.fields || {};
 
-     
+      return {
+        id: record.id,
+        displayName: f["Display Name"] || "",
+        category: f["Category"] || "",
+        subcategory: f["Subcategory"] || "",
+        shortDescription: f["Short Description"] || "",
+        city: f["City"] || "",
+        state: f["State"] || "",
+        locationType: f["Location Type"] || "",
+        publicLocation: f["Public Location"] || "",
+        ageMin: f["Age Min"] ?? null,
+        ageMax: f["Age Max"] ?? null,
+        publicAgeRange: f["Public Age Range"] || "",
+        tags: Array.isArray(f["Tags"]) ? f["Tags"] : [],
+        websiteUrl: f["Website URL"] || "",
+        logo: Array.isArray(f["Logo"]) && f["Logo"][0]?.url ? f["Logo"][0].url : "",
+        featuredPartner: Boolean(f["Featured Partner"]),
+        trustedPick: Boolean(f["Trusted Pick"]),
+        averageRating: f["Average Rating"] ?? null,
+        averageRatingRounded: f["Average Rating Rounded"] ?? null,
+        reviewCount: f["Review Count"] ?? 0,
+        helpfulCount: f["Helpful Count"] ?? 0,
+        approvedQuotes: f["Approved Quotes"] || "",
+        displayStatus: f["Display Status"] || "",
+        sortPriority: f["Sort Priority"] ?? 9999
+      };
+    });
 
+    // Sort by priority (lower number = higher priority)
     records.sort((a, b) => {
       const aPriority = Number(a.sortPriority) || 9999;
       const bPriority = Number(b.sortPriority) || 9999;
@@ -104,48 +119,13 @@ export default async function handler(req, res) {
     });
 
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+
     return res.status(200).json({ records });
+
   } catch (error) {
     return res.status(500).json({
       error: "Server error",
       details: error?.message || String(error)
     });
-  }return {
-  id: record.id,
-  displayName: f["Display Name"] || "",
-  category: f["Category"] || "",
-  subcategory: f["Subcategory"] || "",
-  shortDescription: f["Short Description"] || "",
-  city: f["City"] || "",
-  state: f["State"] || "",
-  locationType: f["Location Type"] || "",
-  publicLocation: f["Public Location"] || "",
-  ageMin: f["Age Min"] ?? null,
-  ageMax: f["Age Max"] ?? null,
-  publicAgeRange: f["Public Age Range"] || "",
-  agesServed: f["Ages Served"] || "",
-  virtualOption: f["Virtual Option"] || "",
-  tags: Array.isArray(f["Tags"]) ? f["Tags"] : [],
-  websiteUrl: f["Website URL"] || "",
-  logo: Array.isArray(f["Logo"]) && f["Logo"][0]?.url ? f["Logo"][0].url : "",
-  contactName: f["Contact Name"] || "",
-  email: f["Email"] || "",
-  phone: f["Phone"] || "",
-  instagram: f["Instagram"] || "",
-  facebook: f["Facebook"] || "",
-  guideCategory: f["Guide Category"] || "",
-  tikTok: f["TikTok"] || "",
-  role: f["Role"] || "",
-  status: f["Status"] || "",
-
-  featuredPartner: Boolean(f["Featured Partner"]),
-  trustedPick: Boolean(f["Trusted Pick"]),
-  averageRating: f["Average Rating"] ?? null,
-  averageRatingRounded: f["Average Rating Rounded"] ?? null,
-  reviewCount: f["Review Count"] ?? 0,
-  helpfulCount: f["Helpful Count"] ?? 0,
-  approvedQuotes: f["Approved Quotes"] || "",
-  displayStatus: f["Display Status"] || "",
-  sortPriority: f["Sort Priority"] ?? 9999,
-  };
+  }
 }
