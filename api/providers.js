@@ -127,7 +127,7 @@ export default async function handler(req, res) {
       })
     );
 
-    res.setHeader("Cache-Control", "s-maxage=1800, stale-while-revalidate=3600");
+    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({ records });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unknown error" });
