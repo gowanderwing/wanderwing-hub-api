@@ -56,7 +56,6 @@ export default async function handler(req, res) {
       "Facebook",
       "Guide Category",
       "TikTok",
-      "Role",
       "Status"
     ];
 
@@ -120,7 +119,6 @@ export default async function handler(req, res) {
         facebook: f["Facebook"] || "",
         guideCategory: f["Guide Category"] || "",
         tikTok: f["TikTok"] || "",
-        role: f["Role"] || "",
         status: f["Status"] || ""
       };
     });
