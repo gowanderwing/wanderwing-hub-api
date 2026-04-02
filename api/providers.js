@@ -34,7 +34,8 @@ export default async function handler(req, res) {
     'State',
     'Status',
     'Sort Priority',
-    'Website'
+    'Website',
+    'Tags'
   ];
 
   const allRecords = [];
@@ -90,7 +91,8 @@ export default async function handler(req, res) {
           state: f['State'] || '',
           status: f['Status'] || '',
           sortPriority: f['Sort Priority'] || 9999,
-          website: f['Website'] || ''
+          website: f['Website'] || '',
+          tags: Array.isArray(f['Tags']) ? f['Tags'] : (f['Tags'] ? [f['Tags']] : [])
         });
       });
 
