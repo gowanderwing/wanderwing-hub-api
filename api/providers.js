@@ -1,5 +1,12 @@
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Cache-Control', 'no-store');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   const AIRTABLE_PAT = process.env.AIRTABLE_PAT;
   const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
@@ -23,15 +30,10 @@ export default async function handler(req, res) {
     'Short Description',
     'Category',
     'Subcategory',
-    'Website',
     'City',
     'State',
-    'Tags',
-    'Logo',
     'Status',
-    'Sort Priority',
-    'Virtual Option',
-    'Ages Served'
+    'Sort Priority'
   ];
 
   const allRecords = [];
@@ -40,17 +42,9 @@ export default async function handler(req, res) {
   try {
     do {
       const params = new URLSearchParams();
-
-      // Correct Airtable view
       params.append('view', AIRTABLE_VIEW_NAME);
-
-      // Correct live filter
       params.append('filterByFormula', "{Status}='Live'");
-
-      // Only request the fields the page needs
       fields.forEach((field) => params.append('fields[]', field));
-
-      // Stable sorting
       params.append('sort[0][field]', 'Sort Priority');
       params.append('sort[0][direction]', 'asc');
 
@@ -77,12 +71,6 @@ export default async function handler(req, res) {
         return res.status(response.status).json({
           error: 'Airtable request failed',
           details: text,
-          debug: {
-            baseId: AIRTABLE_BASE_ID,
-            tableName: AIRTABLE_TABLE_NAME,
-            viewName: AIRTABLE_VIEW_NAME,
-            filter: "{Status}='Live'"
-          }
         });
       }
 
@@ -96,15 +84,10 @@ export default async function handler(req, res) {
           shortDescription: f['Short Description'] || '',
           category: f['Category'] || '',
           subcategory: f['Subcategory'] || '',
-          website: f['Website'] || '',
           city: f['City'] || '',
           state: f['State'] || '',
-          tags: f['Tags'] || [],
-          logo: Array.isArray(f['Logo']) && f['Logo'][0] ? f['Logo'][0].url : '',
           status: f['Status'] || '',
-          sortPriority: f['Sort Priority'] || 9999,
-          virtualOption: f['Virtual Option'] || '',
-          agesServed: f['Ages Served'] || '',
+          sortPriority: f['Sort Priority'] || 9999
         });
       });
 
@@ -115,13 +98,7 @@ export default async function handler(req, res) {
       success: true,
       count: allRecords.length,
       records: allRecords,
-      updatedAt: new Date().toISOString(),
-      debug: {
-        baseId: AIRTABLE_BASE_ID,
-        tableName: AIRTABLE_TABLE_NAME,
-        viewName: AIRTABLE_VIEW_NAME,
-        filter: "{Status}='Live'"
-      }
+      updatedAt: new Date().toISOString()
     });
   } catch (error) {
     return res.status(500).json({
