@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Temporary debug setting: always fetch fresh data
   res.setHeader('Cache-Control', 'no-store');
 
   const AIRTABLE_PAT = process.env.AIRTABLE_PAT;
@@ -41,15 +40,17 @@ export default async function handler(req, res) {
   try {
     do {
       const params = new URLSearchParams();
+
+      // Correct Airtable view
       params.append('view', AIRTABLE_VIEW_NAME);
 
-      // Only show live/published rows
-      params.append('filterByFormula', "{Status}='Published'");
+      // Correct live filter
+      params.append('filterByFormula', "{Status}='Live'");
 
-      // Limit returned fields to improve speed
+      // Only request the fields the page needs
       fields.forEach((field) => params.append('fields[]', field));
 
-      // Sort so the page is stable
+      // Stable sorting
       params.append('sort[0][field]', 'Sort Priority');
       params.append('sort[0][direction]', 'asc');
 
@@ -76,6 +77,12 @@ export default async function handler(req, res) {
         return res.status(response.status).json({
           error: 'Airtable request failed',
           details: text,
+          debug: {
+            baseId: AIRTABLE_BASE_ID,
+            tableName: AIRTABLE_TABLE_NAME,
+            viewName: AIRTABLE_VIEW_NAME,
+            filter: "{Status}='Live'"
+          }
         });
       }
 
@@ -109,6 +116,12 @@ export default async function handler(req, res) {
       count: allRecords.length,
       records: allRecords,
       updatedAt: new Date().toISOString(),
+      debug: {
+        baseId: AIRTABLE_BASE_ID,
+        tableName: AIRTABLE_TABLE_NAME,
+        viewName: AIRTABLE_VIEW_NAME,
+        filter: "{Status}='Live'"
+      }
     });
   } catch (error) {
     return res.status(500).json({
