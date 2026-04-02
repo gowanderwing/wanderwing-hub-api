@@ -33,7 +33,8 @@ export default async function handler(req, res) {
     'City',
     'State',
     'Status',
-    'Sort Priority'
+    'Sort Priority',
+    'Website'
   ];
 
   const allRecords = [];
@@ -80,6 +81,7 @@ export default async function handler(req, res) {
         const f = record.fields || {};
         allRecords.push({
           id: record.id,
+          recordId: record.id,
           providerName: f['Provider Name'] || '',
           shortDescription: f['Short Description'] || '',
           category: f['Category'] || '',
@@ -87,7 +89,8 @@ export default async function handler(req, res) {
           city: f['City'] || '',
           state: f['State'] || '',
           status: f['Status'] || '',
-          sortPriority: f['Sort Priority'] || 9999
+          sortPriority: f['Sort Priority'] || 9999,
+          website: f['Website'] || ''
         });
       });
 
