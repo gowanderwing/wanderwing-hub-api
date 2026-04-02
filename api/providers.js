@@ -15,13 +15,7 @@ export default async function handler(req, res) {
 
   if (!AIRTABLE_PAT || !AIRTABLE_BASE_ID || !AIRTABLE_TABLE_NAME || !AIRTABLE_VIEW_NAME) {
     return res.status(500).json({
-      error: 'Missing Airtable environment variables',
-      missing: {
-        AIRTABLE_PAT: !AIRTABLE_PAT,
-        AIRTABLE_BASE_ID: !AIRTABLE_BASE_ID,
-        AIRTABLE_TABLE_NAME: !AIRTABLE_TABLE_NAME,
-        AIRTABLE_VIEW_NAME: !AIRTABLE_VIEW_NAME,
-      },
+      error: 'Missing Airtable environment variables'
     });
   }
 
@@ -35,7 +29,11 @@ export default async function handler(req, res) {
     'Status',
     'Sort Priority',
     'Website',
-    'Tags'
+    'Tags',
+    'Badge Final',
+    'Average Rating Rounded',
+    'Review Count',
+    'Clicks 14d'
   ];
 
   const allRecords = [];
@@ -90,9 +88,13 @@ export default async function handler(req, res) {
           city: f['City'] || '',
           state: f['State'] || '',
           status: f['Status'] || '',
-          sortPriority: f['Sort Priority'] || 9999,
           website: f['Website'] || '',
-          tags: Array.isArray(f['Tags']) ? f['Tags'] : (f['Tags'] ? [f['Tags']] : [])
+          tags: Array.isArray(f['Tags']) ? f['Tags'] : (f['Tags'] ? [f['Tags']] : []),
+          badge: (f['Badge Final'] || '').toLowerCase(),
+          averageRating: Number(f['Average Rating Rounded'] || 0),
+          reviewCount: Number(f['Review Count'] || 0),
+          clicks14d: Number(f['Clicks 14d'] || 0),
+          sortPriority: f['Sort Priority'] || 9999
         });
       });
 
