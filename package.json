@@ -1,8 +1,7 @@
 {
   "name": "wanderwing-hub-api",
-  "private": true,
-  "version": "1.0.0"
-}
-{
-  "type": "module"
+  "version": "1.0.0",
+  "dependencies": {
+    "airtable": "^0.12.0"
+  }
 }
