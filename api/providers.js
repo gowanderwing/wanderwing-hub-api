@@ -4,6 +4,12 @@ const base = new Airtable({
   apiKey: process.env.AIRTABLE_PAT
 }).base(process.env.AIRTABLE_BASE_ID);
 
+function setCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.wanderwing.org');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
 function getAttachmentUrl(field) {
   if (Array.isArray(field) && field[0] && field[0].url) return field[0].url;
   if (typeof field === 'string') return field;
@@ -13,32 +19,31 @@ function getAttachmentUrl(field) {
 function normalizeArray(field) {
   if (Array.isArray(field)) return field;
   if (typeof field === 'string' && field.trim()) {
-    return field.split(',').map(s => s.trim()).filter(Boolean);
+    return field.split(',').map(function (s) {
+      return s.trim();
+    }).filter(Boolean);
   }
   return [];
 }
 
 function normalizeBadge(field) {
-  if (Array.isArray(field) && field.length) {
-    const value = String(field[0]).toLowerCase().trim();
-    if (value.includes('family')) return 'family';
-    if (value.includes('trend')) return 'trending';
-    if (value.includes('trust')) return 'trusted';
-    return value;
-  }
+  if (Array.isArray(field) && field.length) field = field[0];
+  const value = String(field || '').toLowerCase().trim();
 
-  if (typeof field === 'string' && field.trim()) {
-    const value = field.toLowerCase().trim();
-    if (value.includes('family')) return 'family';
-    if (value.includes('trend')) return 'trending';
-    if (value.includes('trust')) return 'trusted';
-    return value;
-  }
-
+  if (value.includes('family')) return 'family';
+  if (value.includes('trend')) return 'trending';
+  if (value.includes('trust')) return 'trusted';
+  if (value.includes('feature')) return 'featured';
   return '';
 }
 
 module.exports = async function handler(req, res) {
+  setCors(res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const records = await base('Providers')
       .select({
@@ -46,7 +51,7 @@ module.exports = async function handler(req, res) {
       })
       .all();
 
-    const mapped = records.map((record) => {
+    const mapped = records.map(function (record) {
       const f = record.fields;
 
       return {
@@ -57,10 +62,14 @@ module.exports = async function handler(req, res) {
         subcategory: f['Subcategory'] || '',
         city: f['City'] || '',
         state: f['State'] || '',
+        locationType: f['Location Type'] || '',
         website: f['Website'] || '',
         instagram: f['Instagram'] || '',
         facebook: f['Facebook'] || '',
         tiktok: f['TikTok'] || '',
+        contactName: f['Contact Name'] || '',
+        email: f['Email'] || '',
+        phone: f['Phone'] || '',
         logo: getAttachmentUrl(f['Logo']),
         averageRating: Number(f['Average Rating Rounded'] || f['Average Rating'] || 0),
         reviewCount: Number(f['Review Count'] || 0),
