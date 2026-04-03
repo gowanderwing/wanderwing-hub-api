@@ -1,3 +1,6 @@
+contactName: f['Contact Name'] || '',
+email: f['Email'] || '',
+
 const Airtable = require('airtable');
 
 const base = new Airtable({
