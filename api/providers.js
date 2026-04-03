@@ -1,3 +1,6 @@
+export default function handler(req, res) {
+  res.status(200).json({ ok: true, route: 'provider' });
+}
 import Airtable from 'airtable';
 
 const base = new Airtable({
