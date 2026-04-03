@@ -26,10 +26,12 @@ export default async function handler(req, res) {
       recordId: providerRecord.id,
       fields: providerRecord.fields
     });
+
   } catch (error) {
     console.error('provider api error:', error);
+
     return res.status(500).json({
-      error: error.message || 'Unknown server error'
+      error: error.message || 'Unknown error'
     });
   }
 }
