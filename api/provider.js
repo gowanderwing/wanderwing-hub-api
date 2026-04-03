@@ -1,6 +1,3 @@
-contactName: f['Contact Name'] || '',
-email: f['Email'] || '',
-
 const Airtable = require('airtable');
 
 const base = new Airtable({
@@ -16,14 +13,27 @@ function getAttachmentUrl(field) {
 function normalizeArray(field) {
   if (Array.isArray(field)) return field;
   if (typeof field === 'string' && field.trim()) {
-    return field.split(',').map(s => s.trim()).filter(Boolean);
+    return field.split(',').map(function (s) {
+      return s.trim();
+    }).filter(Boolean);
   }
   return [];
 }
 
+function normalizeBadge(field) {
+  if (Array.isArray(field) && field.length) field = field[0];
+  const value = String(field || '').toLowerCase().trim();
+
+  if (value.includes('family')) return 'family';
+  if (value.includes('trend')) return 'trending';
+  if (value.includes('trust')) return 'trusted';
+  if (value.includes('feature')) return 'featured';
+  return '';
+}
+
 module.exports = async function handler(req, res) {
   try {
-    const { id } = req.query;
+    const id = req.query.id;
 
     if (!id) {
       return res.status(400).json({ error: 'Missing provider id' });
@@ -42,16 +52,21 @@ module.exports = async function handler(req, res) {
         .all();
 
       approvedQuotes = quoteRecords
-        .map((record) => ({
-          quote:
-            record.fields['Approved Quote Text'] ||
-            record.fields['Quote'] ||
-            '',
-          reviewerFirstName:
-            record.fields['Reviewer First Name'] ||
-            'Wanderwing family'
-        }))
-        .filter((item) => item.quote);
+        .map(function (record) {
+          return {
+            quote:
+              record.fields['Approved Quote Text'] ||
+              record.fields['Quote'] ||
+              '',
+            reviewerFirstName:
+              record.fields['Reviewer First Name'] ||
+              record.fields['Reviewer Name'] ||
+              'Wanderwing family'
+          };
+        })
+        .filter(function (item) {
+          return item.quote;
+        });
     } catch (reviewError) {
       console.warn('Could not load approved quotes:', reviewError);
     }
@@ -64,16 +79,20 @@ module.exports = async function handler(req, res) {
       subcategory: f['Subcategory'] || '',
       city: f['City'] || '',
       state: f['State'] || '',
+      locationType: f['Location Type'] || '',
       website: f['Website'] || '',
       instagram: f['Instagram'] || '',
       facebook: f['Facebook'] || '',
       tiktok: f['TikTok'] || '',
+      contactName: f['Contact Name'] || '',
+      email: f['Email'] || '',
+      phone: f['Phone'] || '',
       logo: getAttachmentUrl(f['Logo']),
       averageRating: Number(f['Average Rating Rounded'] || f['Average Rating'] || 0),
       reviewCount: Number(f['Review Count'] || 0),
-      badge: f['Badge Override'] || f['Badge'] || '',
+      badge: normalizeBadge(f['Badge Override'] || f['Badge']),
       tags: normalizeArray(f['Tags']),
-      approvedQuotes
+      approvedQuotes: approvedQuotes
     });
   } catch (error) {
     console.error('Error loading provider:', error);
