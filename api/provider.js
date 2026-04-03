@@ -1,17 +1,10 @@
-export default function handler(req, res) {
-  res.status(200).json({ ok: true, route: 'provider' });
-}
-export default function handler(req, res) {
-  const { id } = req.query;
-  res.status(200).json({ ok: true, id: id || null });
-}
-import Airtable from 'airtable';
+const Airtable = require('airtable');
 
 const base = new Airtable({
   apiKey: process.env.AIRTABLE_PAT
 }).base(process.env.AIRTABLE_BASE_ID);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const { id } = req.query;
 
@@ -26,12 +19,10 @@ export default async function handler(req, res) {
       recordId: providerRecord.id,
       fields: providerRecord.fields
     });
-
   } catch (error) {
     console.error('provider api error:', error);
-
     return res.status(500).json({
-      error: error.message || 'Unknown error'
+      error: error.message || 'Unknown server error'
     });
   }
-}
+};
