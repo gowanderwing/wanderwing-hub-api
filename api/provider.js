@@ -4,6 +4,12 @@ const base = new Airtable({
   apiKey: process.env.AIRTABLE_PAT
 }).base(process.env.AIRTABLE_BASE_ID);
 
+function setCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.wanderwing.org');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
 function getAttachmentUrl(field) {
   if (Array.isArray(field) && field[0] && field[0].url) return field[0].url;
   if (typeof field === 'string') return field;
@@ -32,6 +38,12 @@ function normalizeBadge(field) {
 }
 
 module.exports = async function handler(req, res) {
+  setCors(res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const id = req.query.id;
 
