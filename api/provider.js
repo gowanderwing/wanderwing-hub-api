@@ -45,71 +45,46 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const id = req.query.id;
+    const records = await base('Providers')
+      .select({
+        view: 'Public-Live Hub',
+        filterByFormula: "AND({Short Description}!='',{Website}!='')",
+        sort: [{ field: 'Provider Name', direction: 'asc' }]
+      })
+      .all();
 
-    if (!id) {
-      return res.status(400).json({ error: 'Missing provider id' });
-    }
+    const mapped = records.map(function (record) {
+      const f = record.fields;
 
-    const providerRecord = await base('Providers').find(id);
-    const f = providerRecord.fields;
-
-    let approvedQuotes = [];
-
-    try {
-      const quoteRecords = await base('Reviews')
-        .select({
-          filterByFormula: `AND({Provider Record ID}="${id}", {Approved Quote}=1)`
-        })
-        .all();
-
-      approvedQuotes = quoteRecords
-        .map(function (record) {
-          return {
-            quote:
-              record.fields['Approved Quote Text'] ||
-              record.fields['Quote'] ||
-              '',
-            reviewerFirstName:
-              record.fields['Reviewer First Name'] ||
-              record.fields['Reviewer Name'] ||
-              'Wanderwing family'
-          };
-        })
-        .filter(function (item) {
-          return item.quote;
-        });
-    } catch (reviewError) {
-      console.warn('Could not load approved quotes:', reviewError);
-    }
-
-    return res.status(200).json({
-      recordId: providerRecord.id,
-      providerName: f['Provider Name'] || '',
-      shortDescription: f['Short Description'] || '',
-      category: f['Category'] || '',
-      subcategory: f['Subcategory'] || '',
-      city: f['City'] || '',
-      state: f['State'] || '',
-      locationType: f['Location Type'] || '',
-      website: f['Website'] || '',
-      instagram: f['Instagram'] || '',
-      facebook: f['Facebook'] || '',
-      tiktok: f['TikTok'] || '',
-      contactName: f['Contact Name'] || '',
-      email: f['Email'] || '',
-      phone: f['Phone'] || '',
-      logo: getAttachmentUrl(f['Logo']),
-      averageRating: Number(f['Average Rating Rounded'] || f['Average Rating'] || 0),
-      reviewCount: Number(f['Review Count'] || 0),
-      badge: normalizeBadge(f['Badge Override'] || f['Badge']),
-      tags: normalizeArray(f['Tags']),
-      approvedQuotes: approvedQuotes
+      return {
+        recordId: record.id,
+        providerName: f['Provider Name'] || '',
+        shortDescription: f['Short Description'] || '',
+        category: f['Category'] || '',
+        subcategory: f['Subcategory'] || '',
+        city: f['City'] || '',
+        state: f['State'] || '',
+        locationType: f['Location Type'] || '',
+        website: f['Website'] || '',
+        instagram: f['Instagram'] || '',
+        facebook: f['Facebook'] || '',
+        tiktok: f['TikTok'] || '',
+        contactName: f['Contact Name'] || '',
+        email: f['Email'] || '',
+        phone: f['Phone'] || '',
+        logo: getAttachmentUrl(f['Logo']),
+        averageRating: Number(f['Average Rating Rounded'] || f['Average Rating'] || 0),
+        reviewCount: Number(f['Review Count'] || 0),
+        badge: normalizeBadge(f['Badge Override'] || f['Badge']),
+        tags: normalizeArray(f['Tags'])
+      };
     });
+
+    return res.status(200).json({ records: mapped });
   } catch (error) {
-    console.error('Error loading provider:', error);
+    console.error('providers api error:', error);
     return res.status(500).json({
-      error: error.message || 'Failed to load provider'
+      error: error.message || 'Failed to load providers'
     });
   }
 };
