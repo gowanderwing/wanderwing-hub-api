@@ -48,13 +48,13 @@ module.exports = async function handler(req, res) {
     const records = await base('Providers')
       .select({
         view: 'Public-Live Hub',
-        filterByFormula: "AND({Short Description}!='',{Website}!='')",
+        filterByFormula: "AND(LEN(TRIM({Short Description}&''))>0,LEN(TRIM({Website}&''))>0)",
         sort: [{ field: 'Provider Name', direction: 'asc' }]
       })
       .all();
 
     const mapped = records.map(function (record) {
-      const f = record.fields;
+      const f = record.fields || {};
 
       return {
         recordId: record.id,
@@ -78,6 +78,8 @@ module.exports = async function handler(req, res) {
         badge: normalizeBadge(f['Badge Override'] || f['Badge']),
         tags: normalizeArray(f['Tags'])
       };
+    }).filter(function (item) {
+      return item.providerName && item.shortDescription && item.website;
     });
 
     return res.status(200).json({ records: mapped });
