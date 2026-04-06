@@ -45,61 +45,59 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const recordId = String(req.query.id || '').trim();
+
+    if (!recordId) {
+      return res.status(400).json({
+        error: 'Missing required id parameter'
+      });
+    }
+
     const records = await base('Providers')
       .select({
-        view: 'Public-Live Hub',
-        sort: [{ field: 'Provider Name', direction: 'asc' }]
+        view: 'Full View',
+        filterByFormula: `RECORD_ID()="${recordId}"`
       })
       .all();
 
-    const debug = records.map(function (record) {
-      return {
-        id: record.id,
-        fieldKeys: Object.keys(record.fields || {}),
-        fields: record.fields || {}
-      };
-    });
+    if (!records.length) {
+      return res.status(404).json({
+        error: 'Provider not found'
+      });
+    }
 
-    console.log(JSON.stringify(debug, null, 2));
+    const record = records[0];
+    const f = record.fields || {};
 
-    const mapped = records.map(function (record) {
-      const f = record.fields || {};
+    const provider = {
+      recordId: record.id,
+      providerName: f['Provider Name'] || '',
+      shortDescription: f['Short Description'] || '',
+      fullDescription: f['Full Description'] || '',
+      category: f['Category'] || '',
+      subcategory: f['Subcategory'] || '',
+      city: f['City'] || '',
+      state: f['State'] || '',
+      locationType: f['Location Type'] || '',
+      website: f['Website'] || '',
+      instagram: f['Instagram'] || '',
+      facebook: f['Facebook'] || '',
+      tiktok: f['TikTok'] || '',
+      contactName: f['Contact Name'] || '',
+      email: f['Email'] || '',
+      phone: f['Phone'] || '',
+      logo: getAttachmentUrl(f['Logo']),
+      averageRating: Number(f['Average Rating Rounded'] || f['Average Rating'] || 0),
+      reviewCount: Number(f['Review Count'] || 0),
+      badge: normalizeBadge(f['Badge Override'] || f['Badge']),
+      tags: normalizeArray(f['Tags'])
+    };
 
-      return {
-        recordId: record.id,
-        providerName: f['Provider Name'] || '',
-        shortDescription: f['Short Description'] || '',
-        category: f['Category'] || '',
-        subcategory: f['Subcategory'] || '',
-        city: f['City'] || '',
-        state: f['State'] || '',
-        locationType: f['Location Type'] || '',
-        website: f['Website'] || '',
-        instagram: f['Instagram'] || '',
-        facebook: f['Facebook'] || '',
-        tiktok: f['TikTok'] || '',
-        contactName: f['Contact Name'] || '',
-        email: f['Email'] || '',
-        phone: f['Phone'] || '',
-        logo: getAttachmentUrl(f['Logo']),
-        averageRating: Number(f['Average Rating Rounded'] || f['Average Rating'] || 0),
-        reviewCount: Number(f['Review Count'] || 0),
-        badge: normalizeBadge(f['Badge Override'] || f['Badge']),
-        tags: normalizeArray(f['Tags'])
-      };
-    }).filter(function (item) {
-      return (
-        String(item.providerName || '').trim() &&
-        String(item.shortDescription || '').trim() &&
-        String(item.website || '').trim()
-      );
-    });
-
-    return res.status(200).json({ records: mapped });
+    return res.status(200).json(provider);
   } catch (error) {
-    console.error('providers api error:', error);
+    console.error('provider api error:', error);
     return res.status(500).json({
-      error: error.message || 'Failed to load providers'
+      error: error.message || 'Failed to load provider'
     });
   }
 };
