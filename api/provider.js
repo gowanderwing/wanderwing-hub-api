@@ -48,10 +48,19 @@ module.exports = async function handler(req, res) {
     const records = await base('Providers')
       .select({
         view: 'Public-Live Hub',
-        filterByFormula: "AND(LEN(TRIM({Short Description}&''))>0,LEN(TRIM({Website}&''))>0)",
         sort: [{ field: 'Provider Name', direction: 'asc' }]
       })
       .all();
+
+    const debug = records.map(function (record) {
+      return {
+        id: record.id,
+        fieldKeys: Object.keys(record.fields || {}),
+        fields: record.fields || {}
+      };
+    });
+
+    console.log(JSON.stringify(debug, null, 2));
 
     const mapped = records.map(function (record) {
       const f = record.fields || {};
@@ -79,7 +88,11 @@ module.exports = async function handler(req, res) {
         tags: normalizeArray(f['Tags'])
       };
     }).filter(function (item) {
-      return item.providerName && item.shortDescription && item.website;
+      return (
+        String(item.providerName || '').trim() &&
+        String(item.shortDescription || '').trim() &&
+        String(item.website || '').trim()
+      );
     });
 
     return res.status(200).json({ records: mapped });
