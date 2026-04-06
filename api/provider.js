@@ -1,8 +1,3 @@
-console.log(JSON.stringify(records.map(r => ({
-  id: r.id,
-  fields: r.fields
-})), null, 2));
-
 const Airtable = require('airtable');
 
 const base = new Airtable({
