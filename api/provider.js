@@ -37,6 +37,29 @@ function normalizeBadge(field) {
   return '';
 }
 
+async function logProviderClick(recordId, providerName, req) {
+  try {
+    await base('Provider Click Events').create([
+      {
+        fields: {
+          Provider: [recordId],
+          'Provider Name': providerName || '',
+          'Event Type': 'profile_view',
+          Source: 'provider_profile',
+          URL: req.headers.referer || '',
+          'User Agent': req.headers['user-agent'] || '',
+          Timestamp: new Date().toISOString()
+        }
+      }
+    ]);
+  } catch (clickError) {
+    console.warn(
+      'Provider Click Events logging failed, continuing:',
+      clickError.message || clickError
+    );
+  }
+}
+
 module.exports = async function handler(req, res) {
   setCors(res);
 
@@ -92,6 +115,8 @@ module.exports = async function handler(req, res) {
       badge: normalizeBadge(f['Badge Override'] || f['Badge']),
       tags: normalizeArray(f['Tags'])
     };
+
+    await logProviderClick(record.id, provider.providerName, req);
 
     return res.status(200).json(provider);
   } catch (error) {
